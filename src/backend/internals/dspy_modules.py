@@ -79,10 +79,12 @@ class EvaluatorSignature(dspy.Signature):
     2: More than half the days
     3: Nearly every day
 
-    Provide only the corresponding number (0, 1, 2, or 3).
+    Provide the text corresponding to the ideal number (0, 1, 2, or 3)
+    Outputs should be among [Not at all, Several Days, More than half the days, Nearly every day]
+    Just give me the output only.
     """
     inputs = dspy.InputField(desc="Patient's answer")
-    outputs = dspy.OutputField(desc="Single number in range 0-3")
+    outputs = dspy.OutputField(desc="The best mapping")
 
 
 class MappingModule(dspy.Module):
