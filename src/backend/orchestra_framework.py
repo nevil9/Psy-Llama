@@ -1,8 +1,6 @@
 from internals import *
 import dspy 
 
-
-
 # chatbot = Chatbot_M(vanilla_llama_model = bedrock_model, finetuned_llama_model=knowledge_model)
 
 #

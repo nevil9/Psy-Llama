@@ -3,15 +3,15 @@ from .dspy_modules import *
 
 class Chatbot_M:
 
-    def __init__(self, auxilliary_model=None, knowledge_model=None):
+    def __init__(self):
         # Initialize all modules
         self.asker_module = AskerModule()
         self.mapping_module = MappingModule()
         self.evaluator_module = EvaluatorModule()
         self.rephraser_module = RephraserModule()
 
-        self.aux_model = auxilliary_model
-        self.kno_model = knowledge_model
+        # self.aux_model = auxilliary_model
+        # self.kno_model = knowledge_model
 
         # Initialize conversation and questionnaire state
         self.messages = []
@@ -29,9 +29,12 @@ class Chatbot_M:
         ]
         self.questionnaire_started = False
         self.questionnaire_finished = False
+        self.TRIALS = 7
+
+        self.questions = self.questions[:self.TRIALS]
 
         # Store answers in a dictionary
-        self.answers = {key: {} for key in range(len(self.questions))}
+        self.answers = {key: {} for key in self.questions}
 
     def respond(self, user_message):
         """
@@ -58,7 +61,7 @@ class Chatbot_M:
             return self._retry_question(prev_context)
         else:
             # Store the evaluated answer and move to the next question
-            self.answers[self.counter_index] = evaluated_answer
+            self.answers[self.questions[self.counter_index -1]] = evaluated_answer.outputs if decision.__contains__("PASS") else "Didn't wanna answer" # replace this with an intent analyser
             return self._ask_question()
 
     def _ask_question(self):
@@ -83,7 +86,7 @@ class Chatbot_M:
         """
         Rephrases and retries the current question based on the user's previous answer.
         """
-        question_theme = self.questions[self.counter_index]
+        question_theme = self.questions[self.counter_index - 1]
 
         # (TODO) Do it in context of the auxiliary model
         rephrased_question = self.rephraser_module(question_theme, prev_context)
@@ -102,6 +105,12 @@ class Chatbot_M:
         """
         self.messages.append(f"{role}: {message}")
 
+    def get_updated_answers(self):
+        """
+        Returns the dictionary of answers, filtered to only include updated entries.
+        """
+        return {k: v for k, v in self.answers.items() if v is not None}
+    
     def evaluate_condition(self):
         """
         Placeholder for additional condition evaluations in the future.
