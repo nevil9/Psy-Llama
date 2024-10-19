@@ -3,12 +3,15 @@ from .dspy_modules import *
 
 class Chatbot_M:
 
-    def __init__(self):
+    def __init__(self, auxilliary_model=None, knowledge_model=None):
         # Initialize all modules
         self.asker_module = AskerModule()
         self.mapping_module = MappingModule()
         self.evaluator_module = EvaluatorModule()
         self.rephraser_module = RephraserModule()
+
+        self.aux_model = auxilliary_model
+        self.kno_model = knowledge_model
 
         # Initialize conversation and questionnaire state
         self.messages = []
@@ -45,10 +48,12 @@ class Chatbot_M:
         # Evaluate the current answer
         self.add_message("User", user_message)
         prev_context = self.get_previous_context()
+
+        # (TODO) Do it in context of self.knowledge_model 
         evaluated_answer = self.evaluator_module(user_message)
         decision = self.mapping_module(prev_context)
 
-        if decision == "RETRY":
+        if decision.__contains__("RETRY"):
             # Rephrase and ask the question again
             return self._retry_question(prev_context)
         else:
@@ -65,6 +70,8 @@ class Chatbot_M:
             return "Thanks for taking the test."
 
         question_theme = self.questions[self.counter_index]
+
+        # (TODO) Do it in context of the auxiliary model
         question_rephrased = self.asker_module(question_theme)
         self.add_message("Agent", question_rephrased)
 
@@ -77,6 +84,8 @@ class Chatbot_M:
         Rephrases and retries the current question based on the user's previous answer.
         """
         question_theme = self.questions[self.counter_index]
+
+        # (TODO) Do it in context of the auxiliary model
         rephrased_question = self.rephraser_module(question_theme, prev_context)
         self.add_message("Agent", rephrased_question)
         return rephrased_question

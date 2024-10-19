@@ -12,4 +12,10 @@ ollama_model = dspy.OllamaLocal(
     top_k=40
 )
 
+bedrock_model = None
+knowledge_model = None
+
+# bedrock_model = dspy.Bedrock()
+# knowledge_model = dspy.HFClientTGI()
+
 dspy.settings.configure(lm=ollama_model)
