@@ -1,3 +1,4 @@
+from . import knowledge_model, completion_func
 from .dspy_modules import *
 import json
 import requests
@@ -417,7 +418,7 @@ class Chatbot_m:
 
         refactored_prompt = self.evaluator_prompt + f" Context : {prev_context} \n Options : {options}" if not self.use_optimized_prompt else self.evaluator_prompt % (user_message)
         # evaluated_answer = self.km(refactored_prompt) # USE KNOWLEDGE MODEL
-        evaluated_answer = get_api_response(refactored_prompt)
+        evaluated_answer = get_api_response(refactored_prompt) if self.use_api else self.km(prompt=refactored_prompt)
         score = extract_integer_from_text(evaluated_answer)
 
 
@@ -492,3 +493,6 @@ class Chatbot_m:
         Returns the dictionary of answers, filtered to only include updated entries.
         """
         return {k: v for k, v in self.answers.items() if v is not None}
+
+chatbot_instance = Chatbot_M()
+# chatbot_instance = Chatbot_m(knowledge_model=completion_func, auxilliary_model=completion_func)
