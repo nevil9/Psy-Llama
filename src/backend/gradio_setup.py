@@ -27,8 +27,19 @@ def chatbot_response(user_input, history):
     current_index = chatbot.counter_index
     return history, history, current_index, answers
 
+custom_css = """
+/* Align user messages to the left */
+.chatbot .User {
+    text-align: left;
+}
+
+/* Align agent messages to the right */
+.chatbot .Agent {
+    text-align: right;
+}
+"""
 # Create a Gradio interface
-with gr.Blocks() as demo:
+with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("<h1>Chatbot Interface</h1><p>Talk to Chatbot_M!</p>")
     chatbot_ui = gr.Chatbot()
     msg = gr.Textbox(placeholder="Type your message here...", label="Your Message")

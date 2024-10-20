@@ -1,7 +1,24 @@
 from .dspy_modules import *
 import json
 import requests
+import re
 
+# def extract_integer_from_text(text):
+#     match = re.search(r'\[\s*(\d+)\s*\]', text)
+#     if match:
+#         return int(match.group(1))
+#     else:
+#         return None
+    
+# import re
+
+def extract_integer_from_text(text):
+    match = re.search(r'\d+', text)  # Search for any number in the text
+    if match:
+        return int(match.group())
+    else:
+        return None
+    
 def get_api_response(prompt):
     """
     Sends a GET request to the API endpoint with the given prompt and returns the response.
@@ -130,7 +147,7 @@ Instruction: Based on the patient's description of their problem, assess and map
 EVALUATOR_PROMPT = """
 Task: Given a context of Agent's question and the User's response, and a list of options, select the most appropriate option from the provided list
 that best matches the User's response. Only generate the selected option which best suits the patient's response to the question posed. Please don't generate
-any explanation for the answer. Directly generate the appropriate option, and the OPTIONS MUST BE FROM THE LIST OF OPTIONS.
+any explanation for the answer. Directly generate the appropriate option, and the OPTIONS MUST CONTAIN THE OPTION NUMBER AND OPTION TEXT FROM THE LIST OF OPTIONS. 
 """
 
 
@@ -306,6 +323,7 @@ class Chatbot_M:
         """
         self.messages.append(f"{role}: {message}")
 
+
     def get_updated_answers(self):
         """
         Returns the dictionary of answers, filtered to only include updated entries.
@@ -353,10 +371,30 @@ class Chatbot_m:
         self.TRIALS = 7
 
         self.questions = self.questions[:self.TRIALS]
-        self.options_list = ["Not at all", "Several Days", "More than half days", "Nearly every day"]
+        self.options_list = ["[1] Not at all", "[2] Several Days", "[3] More than half days", "[4] Nearly every day"]
         
         # Store answers in a dictionary
         self.answers = {key: {} for key in self.questions}
+
+    def compute_score(self):
+        t = self.answers
+        scores = []
+        for k, v in t.items():
+            if v["score"] != -1:
+                scores.append(v["score"]) 
+
+        if len(scores) == 0 : 
+            return "Undefined"
+        elif sum(scores)/(4*len(scores)) <= 0.25:
+            return "Minimal Anxiety"
+        elif sum(scores)/(4*len(scores)) <= 0.5:
+            return "Mild Anxiety"
+        elif sum(scores)/(4*len(scores)) <= 0.75:
+            return "Moderate Anxiety"
+        else : 
+            return "Sever Anxiety"
+
+
 
     def respond(self, user_message):
         """
@@ -379,6 +417,9 @@ class Chatbot_m:
         refactored_prompt = self.evaluator_prompt + f" Context : {prev_context} \n Options : {options}" if not self.use_optimized_prompt else self.evaluator_prompt % (user_message)
         # evaluated_answer = self.km(refactored_prompt) # USE KNOWLEDGE MODEL
         evaluated_answer = get_api_response(refactored_prompt)
+        score = extract_integer_from_text(evaluated_answer)
+
+
             
         # decision = self.mapping_module(prev_context)
 
@@ -390,7 +431,8 @@ class Chatbot_m:
             return self._retry_question(prev_context)
         else:
             # Store the evaluated answer and move to the next question
-            self.answers[self.questions[self.counter_index -1]] = evaluated_answer if decision.__contains__("PASS") else "Didn't wanna answer" # replace this with an intent analyser
+            self.answers[self.questions[self.counter_index -1]] = {"response" : evaluated_answer, "score": score} if decision.__contains__("PASS") else {"resonse":"Didn't wanna answer", "score":-1} # replace this with an intent analyser
+            
             return self._ask_question()
 
     def _ask_question(self):
@@ -399,6 +441,10 @@ class Chatbot_m:
         """
         if self.counter_index >= len(self.questions):
             self.questionnaire_finished = True
+
+            pd = self.compute_score()
+            self.answers["Provisional Diagnosis"] = pd
+
             return "Thanks for taking the test."
 
         question_theme = self.questions[self.counter_index]
