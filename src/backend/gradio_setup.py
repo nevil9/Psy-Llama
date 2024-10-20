@@ -2,9 +2,17 @@ import gradio as gr
 
 from internals import *
 import dspy 
+from functools import partial
+from langchain_community.llms import Ollama
+import requests
 
-chatbot = Chatbot_M()
 
+llm = Ollama(model="llama3.1")
+llm_func = llm.invoke
+
+chatbot = Chatbot_m(knowledge_model=llm_func, auxilliary_model=llm_func, use_api=False)
+
+# chatbot = Chatbot_M()
 
 # Define a function that updates the conversation history and returns it
 def chatbot_response(user_input, history):
@@ -19,8 +27,19 @@ def chatbot_response(user_input, history):
     current_index = chatbot.counter_index
     return history, history, current_index, answers
 
+custom_css = """
+/* Align user messages to the left */
+.chatbot .User {
+    text-align: left;
+}
+
+/* Align agent messages to the right */
+.chatbot .Agent {
+    text-align: right;
+}
+"""
 # Create a Gradio interface
-with gr.Blocks() as demo:
+with gr.Blocks(css=custom_css) as demo:
     gr.Markdown("<h1>Chatbot Interface</h1><p>Talk to Chatbot_M!</p>")
     chatbot_ui = gr.Chatbot()
     msg = gr.Textbox(placeholder="Type your message here...", label="Your Message")
@@ -34,4 +53,4 @@ with gr.Blocks() as demo:
 
     msg.submit(submit_message, [msg, state], [chatbot_ui, state, progress_slider, answers_output, msg])
 
-demo.launch()
+demo.launch(share=True)
