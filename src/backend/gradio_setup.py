@@ -10,7 +10,7 @@ import requests
 llm = Ollama(model="llama3.1")
 llm_func = llm.invoke
 
-chatbot = Chatbot_m(knowledge_model=llm_func, auxilliary_model=llm_func)
+chatbot = Chatbot_m(knowledge_model=llm_func, auxilliary_model=llm_func, use_api=False)
 
 # chatbot = Chatbot_M()
 

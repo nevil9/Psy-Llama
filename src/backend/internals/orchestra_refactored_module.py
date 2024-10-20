@@ -338,7 +338,7 @@ class Chatbot_M:
 
 
 class Chatbot_m:
-    def __init__(self, knowledge_model, auxilliary_model, use_optimized_prompt=False):
+    def __init__(self, knowledge_model, auxilliary_model, use_optimized_prompt=False, use_api=True):
         self.asker_prompt = ASKER_PROMPT
         self.mapping_prompt = MAPPING_PROMPT
         self.evaluator_prompt = EVALUATOR_PROMPT
@@ -350,6 +350,7 @@ class Chatbot_m:
             self.evaluator_prompt = EVALUATOR_OPTIMIZED_PROMPT
             self.rephraser_prompt = REPHRASER_OPTIMIZED_PROMPT
 
+        self.use_api = use_api
 
         self.km = knowledge_model
         self.nm = auxilliary_model
@@ -453,7 +454,7 @@ class Chatbot_m:
         # question_rephrased = self.asker_module(question_theme)
  
         refactored_prompt = self.asker_prompt + f"\nInput : {question_theme}" if not self.use_optimized_prompt else self.asker_prompt % (question_theme)
-        question_rephrased = get_api_response(refactored_prompt) # USE KNOWLEDGE MODEL
+        question_rephrased = get_api_response(refactored_prompt) if self.use_api else self.km(refactored_prompt) # USE KNOWLEDGE MODEL
 
         self.add_message("Agent", question_rephrased)
 
