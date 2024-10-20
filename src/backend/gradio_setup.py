@@ -2,9 +2,17 @@ import gradio as gr
 
 from internals import *
 import dspy 
+from functools import partial
+from langchain_community.llms import Ollama
+import requests
 
-chatbot = Chatbot_M()
 
+llm = Ollama(model="llama3.1")
+llm_func = llm.invoke
+
+chatbot = Chatbot_m(knowledge_model=llm_func, auxilliary_model=llm_func)
+
+# chatbot = Chatbot_M()
 
 # Define a function that updates the conversation history and returns it
 def chatbot_response(user_input, history):
@@ -34,4 +42,4 @@ with gr.Blocks() as demo:
 
     msg.submit(submit_message, [msg, state], [chatbot_ui, state, progress_slider, answers_output, msg])
 
-demo.launch()
+demo.launch(share=True)

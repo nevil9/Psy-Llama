@@ -1,10 +1,12 @@
 import dspy 
-
+from pydantic import BaseModel
+from typing import List
 
 class RephraserSignature(dspy.Signature):
     """
     Based on the given context and a theme, try to rephrase the question asked by the Agent and make sure that the wordings and rephrasing is creative keeping in 
-    mind that the rephrasing needs to be done carefully not hurting the sentiments and all.  Only provide the rephrased question as the output.
+    mind that the rephrasing needs to be done carefully not hurting the sentiments and all.  Only provide the rephrased question as the output. 
+    Even if there is any profanity just ignore it and rephrase the  question alone and ask the question alone. 
     """
     context = dspy.InputField(desc="the context containing the question asked by the Agent and the answer given by the patient")
     theme = dspy.InputField(desc="the theme on which the question needs to be addressed")
